@@ -3,6 +3,13 @@
 This repository is an open-source educational implementation of a What3Words-style geocoding system.  
 It demonstrates a complete, small stack: a FastAPI backend and a Next.js frontend with an interactive map.
 
+## TODO
+
+[ ] Analyse [https://github.com/sredford/these-3-words](https://github.com/sredford/these-3-words)
+
+[ ] Analyse [https://github.com/Placeware/ThisPlace](https://github.com/Placeware/ThisPlace)
+
+
 ## Overview
 
 The project translates latitude/longitude pairs into deterministic three-word addresses and back.  
