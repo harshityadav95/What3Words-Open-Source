@@ -1,5 +1,9 @@
 from sqlalchemy import Column, Integer, String, Float
-from .database import Base
+# Support both package import (backend.*) and direct module import during tests
+try:
+    from .database import Base
+except ImportError:
+    from database import Base
 
 class Geocode(Base):
     __tablename__ = "geocodes"

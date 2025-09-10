@@ -149,4 +149,70 @@ This is an educational, simplified reimplementation of What3Words:
 
 If you'd like, run the app locally and explore adjusting the mapping algorithm or integrating a larger wordlist.
 
+## How It Works: Internal Logic and Algorithm
+
+This system maps the entire Earth's surface to a grid of approximately 3x3 meter squares and assigns a unique three-word address to each square. The process is entirely deterministic, meaning a specific location will always convert to the same three words, and those three words will always convert back to the same location.
+
+### 1. The Grid System
+
+- The Earth is modeled as a sphere with a radius of `6,371,008.8` meters.
+- The total surface area is divided into `56.7` trillion 3x3 meter squares.
+- To manage this vast number of squares, a grid is created with a 2:1 aspect ratio, resulting in `266,432` latitude cells and `532,864` longitude cells.
+- This grid forms the basis for converting geographic coordinates into a single, unique number (`grid_index`).
+
+### 2. Word List and Permutations
+
+- A predefined list of words is loaded from `backend/words.txt` and other files in `backend/wordlists`.
+- The system requires a minimum vocabulary size to ensure there are enough unique three-word combinations to cover all grid squares.
+- If the word list is too small, the system will programmatically generate additional "synthetic" words to meet the minimum requirement.
+- The total number of unique three-word permutations is calculated as `n * (n-1) * (n-2)`, where `n` is the size of the word list.
+
+### 3. Geocoding Algorithm (Coordinates to Words)
+
+The conversion from latitude and longitude to three words follows these steps:
+
+1.  **Input Validation:** The `lat_lng_to_words` function first checks if the input latitude is between -90 and 90 and the longitude is between -180 and 180.
+2.  **Grid Calculation:** The geographic coordinates are mapped to the grid to determine the corresponding `lat_grid` and `lng_grid` cell numbers.
+3.  **Unique Index:** These grid numbers are combined to produce a single, unique `grid_index` for that square.
+4.  **Permutation Mapping:** The `grid_index` is mathematically converted into a unique combination of three distinct indices from the word list. This is done without generating all possible permutations, making the process highly efficient.
+5.  **Word Selection:** The three indices are used to look up the corresponding words in the sorted word list, forming the three-word address.
+
+### 4. Reverse Geocoding Algorithm (Words to Coordinates)
+
+The conversion from three words back to latitude and longitude is the reverse process:
+
+1.  **Input Validation:** The `words_to_lat_lng` function ensures that three unique, alphabetic words are provided.
+2.  **Word-to-Index Mapping:** Each word is looked up in a pre-computed `WORD_TO_INDEX` dictionary to get its index in the word list.
+3.  **Index Reconstruction:** The three-word indices are used to mathematically reconstruct the original `grid_index`.
+4.  **Coordinate Calculation:** The `grid_index` is then converted back into `lat_grid` and `lng_grid` numbers.
+5.  **Final Coordinates:** These grid numbers are used to calculate the final latitude and longitude, with the coordinates centered in the middle of the square for accuracy.
+
+## How to Add a New Dictionary or Language
+
+Adding a new wordlist or language is a straightforward process. The system is designed to be extensible, and you can add new `.txt` files to the `backend/wordlists` directory.
+
+### Steps to Add a New Word List:
+
+1.  **Create a Word List File:**
+    - Create a new text file (e.g., `my_custom_words.txt`).
+    - Add one word per line.
+    - Words should be lowercase and contain only alphabetic characters (a-z).
+    - Ensure the file is saved with UTF-8 encoding.
+
+2.  **Add the File to the Wordlists Directory:**
+    - Place your new `.txt` file inside the `backend/wordlists/` directory.
+    - Any `.txt` file in this directory will be automatically loaded and merged with the existing word lists when the application starts.
+
+3.  **Special Mode for "India-Only" Words:**
+    - If you want to create a word list for a specific region (e.g., India), you can place it in `backend/wordlists/india_only/`.
+    - This mode can be activated by setting the environment variable `INDIA_ONLY_WORDS` to `"1"`, `"true"`, `"yes"`, or `"on"`.
+    - When this mode is active, only the word lists from the `india_only` directory will be loaded.
+
+### Files to Update:
+
+-   **Primary:** No code changes are required if you are simply adding a new `.txt` file to the `backend/wordlists/` directory.
+-   **Optional:** If you want to add a new "mode" (like the "india" mode), you will need to update the `load_word_list` function in [`backend/geocoding.py`](backend/geocoding.py:1) to handle the new mode.
+
+By following these steps, you can easily extend the system's vocabulary or adapt it to new languages and regions.
+
 End.

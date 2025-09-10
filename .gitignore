@@ -17,10 +17,7 @@ pip-wheel-metadata/
 .mypy_cache/
 coverage/
 htmlcov/
-*.sqlite3
-*.db
-what3words.db
-backend/what3words.db
+
 
 # Node / Next.js
 node_modules/

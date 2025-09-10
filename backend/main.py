@@ -1,10 +1,19 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from .database import SessionLocal, engine
-from . import models
-from .schemas import CoordsRequest, WordsRequest, WordsResponse, CoordsResponse
-from .geocoding import lat_lng_to_words, words_to_lat_lng
+
+# Support running as a package (uvicorn backend.main:app) and as a module in tests (pytest from backend/)
+try:
+    from .database import SessionLocal, engine
+    from . import models
+    from .schemas import CoordsRequest, WordsRequest, WordsResponse, CoordsResponse
+    from .geocoding import lat_lng_to_words, words_to_lat_lng
+except ImportError:
+    # Fallback for direct execution/import without package context
+    from database import SessionLocal, engine
+    import models
+    from schemas import CoordsRequest, WordsRequest, WordsResponse, CoordsResponse
+    from geocoding import lat_lng_to_words, words_to_lat_lng
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -33,7 +42,7 @@ app.add_middleware(
 def convert_coords_to_words(request: CoordsRequest):
     """Convert latitude and longitude to three words"""
     try:
-        word1, word2, word3 = lat_lng_to_words(request.latitude, request.longitude)
+        word1, word2, word3 = lat_lng_to_words(request.latitude, request.longitude, request.mode)
         return WordsResponse(word1=word1, word2=word2, word3=word3)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -42,7 +51,7 @@ def convert_coords_to_words(request: CoordsRequest):
 def convert_words_to_coords(request: WordsRequest):
     """Convert three words to latitude and longitude"""
     try:
-        lat, lng = words_to_lat_lng(request.word1, request.word2, request.word3)
+        lat, lng = words_to_lat_lng(request.word1, request.word2, request.word3, request.mode)
         return CoordsResponse(latitude=lat, longitude=lng)
     except ValueError as e:
         raise HTTPException(status_code=400, detail="Invalid words provided")
